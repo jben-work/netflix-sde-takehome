@@ -16,7 +16,7 @@ echo "✓ InfluxDB is ready"
 sleep 10
 
 # Use the mounted dashboard file
-DASHBOARD_FILE="/docker-mount/dashboard.yml"
+DASHBOARD_FILE="/tmp/dashboard.yml"
 
 if [ ! -f "$DASHBOARD_FILE" ]; then
     echo "✗ Dashboard file not found at $DASHBOARD_FILE"
