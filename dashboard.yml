@@ -1,0 +1,76 @@
+apiVersion: influxdata.com/v2alpha1
+kind: Dashboard
+metadata:
+  name: weather-dashboard
+spec:
+  name: Weather Dashboard
+  description: Dashboard created via template API
+  charts:
+    - kind: Table
+      name: Weather Cell
+      width: 12
+      height: 3
+      colors:
+        - id: base
+          type: text
+          hex: "#ffffff"
+          name: white
+          value: 0
+      queries:
+        - query: |
+            from(bucket: "default")
+              |> range(start: -30m)
+              |> filter(fn: (r) => r["_measurement"] == "weather")
+              |> filter(fn: (r) => r["_field"] =~ /^(temperature_celsius|humidity|pressure|cloudcover|wind_speed_kmph|visibility_km|temperature_fahrenheit|temperature_kelvin|latitude|longitude)$/)
+              |> group(columns: ["a_location", "_field"])
+              |> last()
+              |> group()
+              |> pivot(rowKey: ["a_location", "country"], columnKey: ["_field"], valueColumn: "_value")
+              |> drop(columns: ["_start", "_stop", "_time", "_measurement"])
+              |> keep(columns: ["a_location", "country", "humidity", "pressure", "temperature_celsius", "temperature_fahrenheit", "temperature_kelvin", "cloudcover", "latitude", "longitude"])
+              |> sort(columns: ["temperature_celsius"], desc: true)
+      fieldOptions:
+        - fieldName: a_location
+          displayName: a_location
+          visible: true
+        - fieldName: country
+          displayName: country
+          visible: true
+        - fieldName: cloudcover
+          displayName: cloudcover
+          visible: true
+        - fieldName: humidity
+          displayName: humidity
+          visible: true
+        - fieldName: latitude
+          displayName: latitude
+          visible: true
+        - fieldName: longitude
+          displayName: longitude
+          visible: true
+        - fieldName: pressure
+          displayName: pressure
+          visible: true
+        - fieldName: temperature_celsius
+          displayName: temperature_celsius
+          visible: true
+        - fieldName: temperature_fahrenheit
+          displayName: temperature_fahrenheit
+          visible: true
+        - fieldName: temperature_kelvin
+          displayName: temperature_kelvin
+          visible: true
+      tableOptions:
+        verticalTimeAxis: true
+        sortBy:
+          internalName: ""
+          displayName: ""
+          visible: false
+        wrapping: ""
+        fixFirstColumn: false
+      timeFormat: YYYY-MM-DD HH:mm:ss
+      staticLegend:
+        colorizeRows: false
+        enable: false
+        hide: false
+        orientationThreshold: 10
