@@ -49,7 +49,7 @@ else
         
         # Verify dashboard was created
         echo "Listing dashboards:"
-        influx dashboards list --host http://localhost:8086
+        influx dashboards --host http://localhost:8086
         
         # Also list stacks to see what was created
         echo "Listing stacks:"
