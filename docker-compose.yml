@@ -15,13 +15,13 @@ services:
         target: /etc/influxdb2
       - type: bind
         source: ./dashboard.yml
-        target: /docker-mount/dashboard.yml
+        target: /tmp/dashboard.yml
         read_only: true
       - type: bind
         source: ./influxdb-entrypoint.sh
-        target: /docker-mount/influxdb-entrypoint.sh
+        target: /tmp/influxdb-entrypoint.sh
         read_only: true
-    entrypoint: ["/bin/bash", "/docker-mount/influxdb-entrypoint.sh"]
+    entrypoint: ["/bin/bash", "/tmp/influxdb-entrypoint.sh"]
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
@@ -41,7 +41,7 @@ services:
     privileged: true
     volumes:
       - ./influxdb2_config:/tmp/influxdb2_config
-      - ./:/workspace
+      - token_volume:/tmp
     depends_on:
       influxdb2:
         condition: service_healthy
@@ -51,12 +51,6 @@ services:
       - |
         echo 'Extracting InfluxDB admin token from config file...'
         sleep 10
-        
-        # Remove extracted_token if it exists as a directory
-        if [ -d "/workspace/extracted_token" ]; then
-          echo "Removing extracted_token directory..."
-          rm -rf /workspace/extracted_token
-        fi
         
         # Look for influx-configs file in the mounted config directory
         CONFIG_FILE="/tmp/influxdb2_config/influx-configs"
@@ -81,8 +75,8 @@ services:
         echo "✓ Found admin token: $${TOKEN:0:10}...$${TOKEN: -4}"
         
         # Write token to a file that can be read by other services
-        echo "INFLUXDB_TOKEN=$$TOKEN" > /workspace/extracted_token
-        echo '✓ Token saved to extracted_token'
+        echo "INFLUXDB_TOKEN=$$TOKEN" > /tmp/extracted_token
+        echo '✓ Token saved to /tmp/extracted_token'
     restart: "no"
 
   get_weather:
@@ -93,6 +87,7 @@ services:
     privileged: true
     volumes:
       - ./:/workspace:ro
+      - token_volume:/tmp
     working_dir: /workspace
     environment:
       - INFLUXDB_URL=http://influxdb2:8086
@@ -101,5 +96,8 @@ services:
     depends_on:
       token_extractor:
         condition: service_completed_successfully
+
+volumes:
+  token_volume:
 
 

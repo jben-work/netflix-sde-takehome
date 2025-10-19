@@ -167,12 +167,8 @@ def get_influxdb_token() -> str:
         print(f"✓ Found token in environment: {token[:10]}...{token[-4:] if len(token) > 14 else token}")
         return token
     
-    # Try to read from the mounted env file
-    token_file_path = "/workspace/extracted_token"
-    
-    # Also try /tmp location for backward compatibility
-    if not os.path.exists(token_file_path):
-        token_file_path = "/tmp/extracted_token"
+    # Try to read from the mounted env file (shared via Docker volume)
+    token_file_path = "/tmp/extracted_token"
     
     debug_print(f"Looking for token file at: {token_file_path}")
     if DEBUG:
