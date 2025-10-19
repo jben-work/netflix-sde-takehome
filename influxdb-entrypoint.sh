@@ -43,17 +43,6 @@ else
     echo "..."
     echo ""
     
-    echo "======================================"
-    echo "DEBUG MODE: Sleeping for 10 minutes..."
-    echo "You can now exec into the container to debug:"
-    echo "  docker exec -it influxdb2 /bin/bash"
-    echo "Then try commands like:"
-    echo "  influx dashboards list --host http://localhost:8086"
-    echo "  influx stacks --host http://localhost:8086"
-    echo "  influx apply -f $DASHBOARD_FILE --org-id $ORG_ID --host http://localhost:8086 --force yes"
-    echo "======================================"
-    sleep 600
-    
     if influx apply -f "$DASHBOARD_FILE" --org-id $ORG_ID --host http://localhost:8086 --force yes; then
         echo "✓ Dashboard template applied successfully!"
         echo "✓ Weather Dashboard is now available at http://localhost:8086"
