@@ -1,0 +1,17 @@
+# Ignore files that don't need to be in the Docker build context
+.git
+.gitignore
+README.md
+docker-compose.yml
+influxdb2_data/
+influxdb2_config/
+*.md
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.pytest_cache/

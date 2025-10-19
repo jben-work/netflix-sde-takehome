@@ -1,0 +1,50 @@
+graph TB
+    %% External Services
+    WeatherAPI["🌤️ Weather API<br/>(wttr.in)"]
+    
+    %% Docker Services
+    InfluxDB["🗄️ InfluxDB v2<br/>influxdb2:8086"]
+    TokenExtractor["🔑 Token Extractor<br/>(Alpine Container)"]
+    WeatherCollector["🌡️ Weather Collector<br/>(Python Service)"]
+    
+    %% Storage
+    InfluxData[("💾 InfluxDB Data<br/>./influxdb2_data")]
+    InfluxConfig[("⚙️ InfluxDB Config<br/>./influxdb2_config")]
+    TokenFile[("🎫 Token File<br/>./extracted_token")]
+    DashboardTemplate[("📋 Dashboard Template<br/>./dashboard.yml")]
+    EntrypointScript[("🚀 Entrypoint Script<br/>./influxdb-entrypoint.sh")]
+    
+    %% Web Interface
+    WebUI["🖥️ InfluxDB Web UI<br/>localhost:8086"]
+    Dashboard["📈 Weather Dashboard<br/>(Table View)"]
+    
+    %% Flow and Dependencies - InfluxDB Startup
+    EntrypointScript --> |"custom entrypoint"| InfluxDB
+    DashboardTemplate --> |"mounted at startup"| InfluxDB
+    InfluxDB --> |"auto-generates token"| InfluxConfig
+    InfluxDB --> |"applies dashboard.yml via influx CLI"| Dashboard
+    
+    %% Token Extraction Flow
+    InfluxConfig --> |"reads config file"| TokenExtractor
+    TokenExtractor --> |"extracts & saves token"| TokenFile
+    
+    %% Weather Collection Flow
+    TokenFile --> |"reads token"| WeatherCollector
+    WeatherAPI --> |"fetches weather data"| WeatherCollector
+    WeatherCollector --> |"writes time-series data"| InfluxDB
+    
+    %% Data Storage & Display
+    InfluxDB --> |"stores data"| InfluxData
+    InfluxDB --> |"serves web interface"| WebUI
+    WebUI --> |"displays"| Dashboard
+    
+    %% Styling
+    classDef storage fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef service fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef external fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef ui fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    
+    class InfluxData,InfluxConfig,TokenFile,DashboardTemplate,EntrypointScript storage
+    class InfluxDB,TokenExtractor,WeatherCollector service
+    class WeatherAPI external
+    class WebUI,Dashboard ui

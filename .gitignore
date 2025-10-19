@@ -1,0 +1,5 @@
+# Add this to your .gitignore to never commit secrets
+.env
+*.env
+influxdb2_data/
+influxdb2_config/

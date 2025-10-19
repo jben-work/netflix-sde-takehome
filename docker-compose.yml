@@ -1,0 +1,98 @@
+services:
+  influxdb2:
+    image: influxdb:2
+    container_name: influxdb2
+    user: "0:0"
+    privileged: true
+    ports:
+      - "8086:8086"
+    volumes:
+      - type: bind
+        source: ./influxdb2_data
+        target: /var/lib/influxdb2
+      - type: bind
+        source: ./influxdb2_config
+        target: /etc/influxdb2
+      - type: bind
+        source: ./dashboard.yml
+        target: /tmp/dashboard.yml
+        read_only: true
+      - type: bind
+        source: ./influxdb-entrypoint.sh
+        target: /tmp/influxdb-entrypoint.sh
+        read_only: true
+    entrypoint: ["/bin/bash", "/tmp/influxdb-entrypoint.sh"]
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123!
+      - DOCKER_INFLUXDB_INIT_ORG=nflx
+      - DOCKER_INFLUXDB_INIT_BUCKET=default
+      # No DOCKER_INFLUXDB_INIT_ADMIN_TOKEN - let InfluxDB auto-generate
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  token_extractor:
+    image: alpine:latest
+    container_name: token_extractor
+    privileged: true
+    volumes:
+      - ./influxdb2_config:/tmp/influxdb2_config
+      - ./:/workspace
+    depends_on:
+      influxdb2:
+        condition: service_healthy
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        echo 'Extracting InfluxDB admin token from config file...'
+        sleep 10
+        
+        # Look for influx-configs file in the mounted config directory
+        CONFIG_FILE="/tmp/influxdb2_config/influx-configs"
+        
+        if [ ! -f "$$CONFIG_FILE" ]; then
+          echo "✗ Config file not found at: $$CONFIG_FILE"
+          echo "Available files in config directory:"
+          ls -la /tmp/influxdb2_config/ 2>/dev/null || echo "Config directory not accessible"
+          exit 1
+        fi
+        
+        echo "✓ Found config file: $$CONFIG_FILE"
+        TOKEN=$$(grep '^  token = ' "$$CONFIG_FILE" | sed 's/.*token = "\(.*\)"/\1/')
+        
+        if [ -z "$$TOKEN" ]; then
+          echo '✗ Token extraction failed'
+          echo 'Config file contents:'
+          cat "$$CONFIG_FILE" 2>/dev/null || echo 'Could not read config file'
+          exit 1
+        fi
+        
+        echo "✓ Found admin token: $${TOKEN:0:10}...$${TOKEN: -4}"
+        
+        # Write token to a file that can be read by other services
+        echo "INFLUXDB_TOKEN=$$TOKEN" > /workspace/extracted_token
+        echo '✓ Token saved to extracted_token'
+    restart: "no"
+
+  get_weather:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: get_weather
+    privileged: true
+    volumes:
+      - ./extracted_token:/tmp/extracted_token:ro
+    environment:
+      - INFLUXDB_URL=http://influxdb2:8086
+      - INFLUXDB_ORG=nflx
+      - INFLUXDB_BUCKET=default
+    depends_on:
+      token_extractor:
+        condition: service_completed_successfully
+
+
