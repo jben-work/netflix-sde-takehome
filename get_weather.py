@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Weather fetcher using wttr.in JSON API
-Uses only built-in Python libraries
+Uses only built-in Python libraries for portability
 """
 
 import urllib.request
@@ -17,6 +17,7 @@ sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
 
 # Debug mode - controlled by environment variable
+# Allows more detailed logging when enabled
 DEBUG = os.getenv('DEBUG', '').lower() in ('true', '1', 'yes')
 
 def debug_print(message: str):
@@ -167,7 +168,11 @@ def get_influxdb_token() -> str:
         return token
     
     # Try to read from the mounted env file
-    token_file_path = "/tmp/extracted_token"
+    token_file_path = "/workspace/extracted_token"
+    
+    # Also try /tmp location for backward compatibility
+    if not os.path.exists(token_file_path):
+        token_file_path = "/tmp/extracted_token"
     
     debug_print(f"Looking for token file at: {token_file_path}")
     if DEBUG:

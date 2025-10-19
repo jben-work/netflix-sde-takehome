@@ -15,13 +15,13 @@ services:
         target: /etc/influxdb2
       - type: bind
         source: ./dashboard.yml
-        target: /tmp/dashboard.yml
+        target: /docker-mount/dashboard.yml
         read_only: true
       - type: bind
         source: ./influxdb-entrypoint.sh
-        target: /tmp/influxdb-entrypoint.sh
+        target: /docker-mount/influxdb-entrypoint.sh
         read_only: true
-    entrypoint: ["/bin/bash", "/tmp/influxdb-entrypoint.sh"]
+    entrypoint: ["/bin/bash", "/docker-mount/influxdb-entrypoint.sh"]
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
@@ -51,6 +51,12 @@ services:
       - |
         echo 'Extracting InfluxDB admin token from config file...'
         sleep 10
+        
+        # Remove extracted_token if it exists as a directory
+        if [ -d "/workspace/extracted_token" ]; then
+          echo "Removing extracted_token directory..."
+          rm -rf /workspace/extracted_token
+        fi
         
         # Look for influx-configs file in the mounted config directory
         CONFIG_FILE="/tmp/influxdb2_config/influx-configs"
@@ -86,7 +92,8 @@ services:
     container_name: get_weather
     privileged: true
     volumes:
-      - ./extracted_token:/tmp/extracted_token:ro
+      - ./:/workspace:ro
+    working_dir: /workspace
     environment:
       - INFLUXDB_URL=http://influxdb2:8086
       - INFLUXDB_ORG=nflx

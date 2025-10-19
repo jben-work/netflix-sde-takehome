@@ -103,7 +103,7 @@ All configuration is managed in `docker-compose.yml`:
 - Bucket: `default`
 
 **Weather Collector:**
-- Polling interval: 30 seconds
+- Polling interval: 30 seconds 
 - Data retention: Managed by InfluxDB (default: infinite)
 - Debug mode: Set `DEBUG=true` environment variable to enable detailed logging
 
@@ -133,6 +133,7 @@ The Weather Dashboard is automatically created and includes:
 **Permission errors:**
 - The system will automatically create `influxdb2_data` and `influxdb2_config` directories
 - If you encounter permission issues, ensure Docker has access to the current directory
+- If you are re-running this locally, `rm -rf influxdb2_data influxdb2_config`
 
 **Dashboard not appearing:**
 - Wait 10-20 seconds after startup for the dashboard to be created
@@ -144,6 +145,14 @@ The Weather Dashboard is automatically created and includes:
 - Verify token extraction succeeded: `docker-compose logs token_extractor`
 - Ensure the wttr.in API is accessible from your network
 - Enable debug mode by setting `DEBUG=true` in the `get_weather` service environment variables for more detailed logging
+
+**"Is a directory" error for extracted_token:**
+- This happens when the `extracted_token` file was created as a directory
+- Run the clean restart commands below to fix it
+
+**Container name already in use:**
+- Run `docker-compose down` to remove old containers
+- If that doesn't work, run `docker rm -f influxdb2 token_extractor get_weather`
 
 **Clean restart:**
 ```bash
