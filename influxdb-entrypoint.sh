@@ -15,20 +15,12 @@ echo "✓ InfluxDB is ready"
 # Wait a bit more for setup to complete
 sleep 10
 
-# Copy dashboard file if it's mounted as a directory (happens in some environments)
-if [ -d "/tmp/dashboard.yml" ]; then
-    echo "Detected dashboard.yml mounted as directory, checking for file..."
-    if [ -f "/docker-mount/dashboard.yml" ]; then
-        cp /docker-mount/dashboard.yml /tmp/dashboard-actual.yml
-        DASHBOARD_FILE="/tmp/dashboard-actual.yml"
-    else
-        echo "✗ Could not find dashboard file"
-        exit 1
-    fi
-elif [ -f "/tmp/dashboard.yml" ]; then
-    DASHBOARD_FILE="/tmp/dashboard.yml"
-else
-    echo "✗ Dashboard file not found"
+# Use the mounted dashboard file
+DASHBOARD_FILE="/docker-mount/dashboard.yml"
+
+if [ ! -f "$DASHBOARD_FILE" ]; then
+    echo "✗ Dashboard file not found at $DASHBOARD_FILE"
+    ls -la /docker-mount/
     exit 1
 fi
 
