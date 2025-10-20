@@ -219,7 +219,7 @@ Further, given the recent AWS outage, distributing the per-city-instances across
 As far as telemetry is concerned, since we already have InfluxDB, a logical next step would be to wire up the time-series data to Grafana. We could then use tools like PagerDuty to setup on-call rotations and Slack for coordination.
 
 ### Security
-The use of `privileged:true` in Docker is not the correct way to productionalize this application. Given the starter docker-compose file's use of bind mounts and how each container needs to read from the other, this was a tradeoff for local development/this interview exercise. In a production environment, we could resolve this by using a Docker managed volume, or something like a k8s persistent volume claim that all pods in the namespace to read/write from.
+The use of `privileged:true` in Docker is not the correct way to productionalize this application. Given the starter docker-compose file's use of bind mounts and how each container needs to read from the other, this was a tradeoff for local development/this interview exercise. In a production environment, we could resolve this by using a Docker managed volume, or something like a k8s persistent volume claim that all pods in the namespace to read/write from. Further, we should remove the hardcoded credentials from the compose file.
 
 
 
