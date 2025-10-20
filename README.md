@@ -210,7 +210,7 @@ Currently, this implementation simply writes data on disk. As such, if the host/
 We also have a single point of failure, given that this instance only runs on one host. Adding in a load balancer and multiple instances would help alleviate any such issues.
 
 ### Performance
-Thinking about performance...I am sure we could optimize some of the code to have parallel API calls. Similarly, instead of individual writes to the DB, we could batch all of our writes into one request. This likely would be a large improvement in DB throughput. Another point here would be to think about caching: it seems that teh wttr.in API has some rate-limiting, so depending on any SLAs we have with customers, we could implement some caching (Redis?) to keep recent results. This would likely also improve startup times.
+Thinking about performance...I am sure we could optimize some of the code to have parallel API calls. Similarly, instead of individual writes to the DB, we could batch all of our writes into one request. This likely would be a large improvement in DB throughput. Another point here would be to think about caching: it seems that the wttr.in API has some rate-limiting, so depending on any SLAs we have with customers, we could implement some caching (Redis?) to keep recent results. This would likely also improve startup times.
 
 ### Georgraphic distribution
 Further, given the recent AWS outage, distributing the per-city-instances across multiple AZs would likely be a good idea. We could also have disaster recovery cold nodes that we could spin up/failover to, in the even that our monitoring detecting any outage(s).
