@@ -196,6 +196,33 @@ The test waits up to 60 seconds for data to appear, making it safe to run immedi
 - Wait 30-60 seconds after startup for data to be collected
 - Review individual service logs for errors
 
+## Productionalization
+### Scaling
+In order to scale this tool, we could begin by deploying multiple instances of this for each city (i.e., one deployment for Nashville, one for Los Gatos, etc.). In addition, we could also implement some sort of queueing mechanism (RabbitMQ/Kafka) to enqueue tasks for each city. We could then scale up workers depending upon demand.
+
+### Reliability and Failover
+Looking at this from an SRE perspective makes me want to think about alternatives to wttr.in (What if wttr.n is down?). As of this writing, AWS is having a massive outage, and despite their marketing materials, it doesn't seem like they actually have automated failover :). Given that wttr.in simply returns weather data, I think we should implement a failover weather service. We could build in some monitoring to verify that the endpoint is working, and if not, then failover to another data provider (a quick Google shows weather.gov and openweathermap.org as alternatives). This may mean we need to write some additional code to ensure that the other providers' data is in the format we expect, though.
+
+### Data Persistence 
+Currently, this implementation simply writes data on disk. As such, if the host/instance falls over, we would have data loss. A better way to architect this would be to write the data to a persistent DB instance hosted elsewhere.
+
+### High Availability
+We also have a single point of failure, given that this instance only runs on one host. Adding in a load balancer and multiple instances would help alleviate any such issues.
+
+### Performance
+Thinking about performance...I am sure we could optimize some of the code to have parallel API calls. Similarly, instead of individual writes to the DB, we could batch all of our writes into one request. This likely would be a large improvement in DB throughput. Another point here would be to think about caching: it seems that teh wttr.in API has some rate-limiting, so depending on any SLAs we have with customers, we could implement some caching (Redis?) to keep recent results. This would likely also improve startup times.
+
+### Georgraphic distribution
+Further, given the recent AWS outage, distributing the per-city-instances across multiple AZs would likely be a good idea. We could also have disaster recovery cold nodes that we could spin up/failover to, in the even that our monitoring detecting any outage(s).
+
+### Observability
+As far as telemetry is concerned, since we already have InfluxDB, a logical next step would be to wire up the time-series data to Grafana. We could then use tools like PagerDuty to setup on-call rotations and Slack for coordination.
+
+### Security
+The use of `privileged:true` in Docker is not the correct way to productionalize this application. Given the starter docker-compose file's use of bind mounts and how each container needs to read from the other, this was a tradeoff for local development/this interview exercise. In a production environment, we could resolve this by using a Docker managed volume, or something like a k8s persistent volume claim that all pods in the namespace to read/write from.
+
+
+
 **Clean restart:**
 ```bash
 docker-compose down
