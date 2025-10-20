@@ -6,10 +6,10 @@ A containerized weather data collection system that fetches weather information 
 
 - 🌍 Fetches weather data for 10 predefined cities every 30 seconds
 - 📊 Stores data in InfluxDB time-series database
-- � Automatic dashboard creation on startup with weather table visualization
-- �🐳 Fully containerized with Docker Compose
+- Automatic dashboard creation on startup with weather table visualization
+- 🐳 Fully containerized with Docker Compose
 - 🔄 Automatic retry logic with exponential backoff
-- � Automated token extraction and management
+- Automated token extraction and management
 
 ## Cities Monitored
 
