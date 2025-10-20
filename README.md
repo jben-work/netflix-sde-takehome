@@ -42,7 +42,22 @@ A containerized weather data collection system that fetches weather information 
    docker-compose up --build -d
    ```
 
-3. **Access the Weather Dashboard:**
+3. **Verify system is working:**
+   ```bash
+   chmod +x test_system.sh
+   ./test_system.sh
+   ```
+
+   This test script will verify:
+   - ✓ InfluxDB is healthy and responding
+   - ✓ All containers are running
+   - ✓ Weather data is being written to the database
+   - ✓ Multiple locations are being tracked
+   - ✓ Dashboard has been created
+   - ✓ Data is fresh (< 2 minutes old)
+   - ✓ No errors in application logs
+
+4. **Access the Weather Dashboard:**
    - Open http://localhost:8086 in your browser
    - Login with:
      - Username: `admin`
@@ -50,7 +65,7 @@ A containerized weather data collection system that fetches weather information 
    - Navigate to **Dashboards** → **Weather Dashboard**
    - View real-time weather data in a table format with cities and weather metrics
 
-4. **View logs (if running in background):**
+5. **View logs (if running in background):**
    ```bash
    docker-compose logs -f get_weather
    ```
@@ -124,7 +139,34 @@ The Weather Dashboard is automatically created and includes:
 - **Real-time updates** as new data arrives every 30 seconds
 - **Sortable columns** for easy data analysis
 
+## Testing
+
+The project includes an automated integration test script that verifies the entire system:
+
+```bash
+./test_system.sh
+```
+
+**What it tests:**
+1. InfluxDB health endpoint
+2. Container status (influxdb2 and get_weather)
+3. Data is being written to InfluxDB
+4. Multiple locations are tracked (expects 10 cities)
+5. Weather Dashboard exists
+6. Data freshness (< 2 minutes old)
+7. No errors in application logs
+
+The test waits up to 60 seconds for data to appear, making it safe to run immediately after starting the containers.
+
 ## Troubleshooting
+
+**Container name conflicts:**
+- If you see "container name is already in use" errors:
+  ```bash
+  docker-compose down
+  docker rm -f influxdb2 token_extractor get_weather
+  docker-compose up --build
+  ```
 
 **Port already in use:**
 - Ensure port 8086 is not already in use
@@ -139,20 +181,20 @@ The Weather Dashboard is automatically created and includes:
 - Wait 10-20 seconds after startup for the dashboard to be created
 - Check InfluxDB logs: `docker-compose logs influxdb2`
 - Verify the dashboard exists: Navigate to Dashboards in the InfluxDB UI
+- Run the test script to verify: `./test_system.sh`
 
 **No data in dashboard:**
 - Check weather collector logs: `docker-compose logs get_weather`
 - Verify token extraction succeeded: `docker-compose logs token_extractor`
 - Ensure the wttr.in API is accessible from your network
 - Enable debug mode by setting `DEBUG=true` in the `get_weather` service environment variables for more detailed logging
+- Run the test script to diagnose: `./test_system.sh`
 
-**"Is a directory" error for extracted_token:**
-- This happens when the `extracted_token` file was created as a directory
-- Run the clean restart commands below to fix it
-
-**Container name already in use:**
-- Run `docker-compose down` to remove old containers
-- If that doesn't work, run `docker rm -f influxdb2 token_extractor get_weather`
+**Test script fails:**
+- Ensure all containers are running: `docker ps`
+- Check that InfluxDB is healthy: `curl http://localhost:8086/health`
+- Wait 30-60 seconds after startup for data to be collected
+- Review individual service logs for errors
 
 **Clean restart:**
 ```bash
