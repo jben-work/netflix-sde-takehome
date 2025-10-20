@@ -2,6 +2,8 @@
 
 A containerized weather data collection system that fetches weather information from wttr.in API and stores it in InfluxDB.
 
+[mermaid chart](https://github.com/jben-work/netflix-sde-takehome/blob/main/files/mermaid_chart.png)
+
 ## Features
 
 - 🌍 Fetches weather data for 10 predefined cities every 30 seconds
